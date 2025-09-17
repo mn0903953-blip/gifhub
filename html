@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trò Chơi Trắc Nghiệm Việt Nam</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+  body {
+    font-family: 'Roboto', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f4f8;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .container {
+    width: 100%;
+    max-width: 800px;
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transform: scale(0.85); /* Adjust scale to fit better in Canva frame */
+    transform-origin: center;
+  }
+  h1 {
+    color: #007bff;
+    margin-bottom: 20px;
+    font-size: 2.5em;
+  }
+  .quiz-section {
+    display: none;
+  }
+  .start-screen {
+    display: block;
+  }
+  .question-container {
+    margin-bottom: 20px;
+  }
+  .question-text {
+    font-size: 1.5em;
+    margin-bottom: 30px;
+    color: #555;
+  }
+  .options-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  .option-btn {
+    width: 100%;
+    padding: 15px;
+    background-color: #e9ecef;
+    border: 2px solid #ced4da;
+    border-radius: 10px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s, border-color 0.3s;
+    text-align: left;
+  }
+  .option-btn:hover {
+    background-color: #dde1e5;
+    transform: translateY(-3px);
+  }
+  .option-btn.correct {
+    background-color: #28a745;
+    color: white;
+    border-color: #218838;
+  }
+  .option-btn.incorrect {
+    background-color: #dc3545;
+    color: white;
+    border-color: #c82333;
+  }
+  .feedback {
+    margin-top: 20px;
+    font-size: 1.2em;
+    font-weight: bold;
+    min-height: 30px;
+  }
+  .navigation-btn, .start-btn {
+    padding: 12px 25px;
+    font-size: 1.1em;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    margin-top: 20px;
+    background-color: #007bff;
+    color: white;
+  }
+  .navigation-btn:hover, .start-btn:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+  }
+  .score-screen {
+    display: none;
+  }
+  .score-text {
+    font-size: 2em;
+    font-weight: bold;
+    color: #28a745;
+    margin-bottom: 20px;
+  }
+  .result-text {
+    font-size: 1.2em;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="quiz-section start-screen">
+    <h1>Trò Chơi Trắc Nghiệm</h1>
+    <p>Hãy cùng thử tài kiến thức của bạn về Ca dao, Lịch sử, Văn học và Thần thoại Việt Nam!</p>
+    <button class="start-btn" onclick="startQuiz()">Bắt đầu</button>
+  </div>
+
+  <div class="quiz-section quiz-game">
+    <div class="question-container">
+      <h3 class="question-text" id="question-text"></h3>
+      <div class="options-container" id="options-container"></div>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <button class="navigation-btn" id="next-btn" onclick="nextQuestion()" style="display: none;">Câu tiếp theo</button>
+  </div>
+
+  <div class="quiz-section score-screen">
+    <h1>Kết Thúc Trò Chơi</h1>
+    <p class="score-text">Bạn đã trả lời đúng <span id="score">0</span> / <span id="total-questions">0</span> câu.</p>
+    <p class="result-text" id="result-message"></p>
+    <button class="navigation-btn" onclick="restartQuiz()">Chơi lại</button>
+  </div>
+</div>
+
+<script>
+  const questions = [
+    // 5 câu Ca dao
+    {
+      question: "Cái cò lặn lội bờ sông, Gánh gạo nuôi chồng tiếng khóc nỉ non, Bao nhiêu ... bấy nhiêu ...",
+      options: ["tình, cảm", "nước, non", "hạt, tiền", "sương, đêm"],
+      answer: "tình, cảm",
+      category: "Ca dao"
+    },
+    {
+      question: "Ăn quả nhớ kẻ trồng cây. Ăn gạo nhớ kẻ xay... giã... sàn...",
+      options: ["đậu, kê", "lúa, khoai", "thóc, giã, sàng", "mỳ, gạo"],
+      answer: "thóc, giã, sàng",
+      category: "Ca dao"
+    },
+    {
+      question: "Gió đưa cây cải về trời, Rau răm ở lại chịu lời ...",
+      options: ["thiếu sót", "đắng cay", "giang nan", "đắng cay"],
+      answer: "đắng cay",
+      category: "Ca dao"
+    },
+    {
+      question: "Đèn ... treo trước bàn thờ, Bát cơm đầy ... mẹ chờ con ăn.",
+      options: ["đỏ, mặn", "xanh, ngọt", "vàng, ân", "lồng, ân"],
+      answer: "vàng, ân",
+      category: "Ca dao"
+    },
+    {
+      question: "Bầu ơi thương lấy bí cùng, Tuy rằng khác ..., nhưng chung một ...",
+      options: ["nhà, phòng", "đất, giàn", "vách, phòng", "tán, cành"],
+      answer: "giống, loài",
+      category: "Ca dao"
+    },
+    
+    // 5 câu Lịch sử Việt Nam
+    {
+      question: "Nước Đại Việt ta của các vị vua nào?",
+      options: ["Trần, Lê", "Lý, Trần, Lê", "Trần, Nguyễn", "Lê, Nguyễn"],
+      answer: "Lý, Trần, Lê",
+      category: "Lịch sử"
+    },
+    {
+      question: "Nước ta có mấy vị anh hùng?",
+      options: ["2", "3", "4", "5"],
+      answer: "2",
+      category: "Lịch sử"
+    },
+    {
+      question: "Lý, Trần, Lê, Nguyễn. Vị vua nào lập ra các triều đại này?",
+      options: ["Lý Thái Tổ, Trần Thủ Độ, Lê Thái Tổ, Nguyễn Ánh", "Lý Công Uẩn, Trần Cảnh, Lê Lợi, Nguyễn Phúc Ánh", "Lý Nhân Tông, Trần Thái Tông, Lê Thánh Tông, Nguyễn Huệ", "Lý Thái Tông, Trần Nhân Tông, Lê Thái Tông, Nguyễn Ánh"],
+      answer: "Lý Công Uẩn, Trần Cảnh, Lê Lợi, Nguyễn Phúc Ánh",
+      category: "Lịch sử"
+    },
+    {
+      question: "Hai Bà Trưng đã lập ra triều đại nào?",
+      options: ["Triều Hán", "Triều Lý", "Triều Đông Hán", "Triều Tây Hán"],
+      answer: "Triều Hán",
+      category: "Lịch sử"
+    },
+    {
+      question: "Vị vua nào được mệnh danh là “Ông tổ nghề thêu”?",
+      options: ["Lý Thái Tổ", "Trần Nhân Tông", "Lê Thánh Tông", "Nguyễn Ánh"],
+      answer: "Lê Thánh Tông",
+      category: "Lịch sử"
+    },
+
+    // 5 câu Văn học Việt Nam
+    {
+      question: "Tác phẩm nào không thuộc thể loại thơ?",
+      options: ["Bình Ngô Đại Cáo", "Truyện Kiều", "Hịch Tướng Sĩ", "Nhật ký trong tù"],
+      answer: "Truyện Kiều",
+      category: "Văn học"
+    },
+    {
+      question: "Nguyễn Trãi không phải là tác giả của tác phẩm nào?",
+      options: ["Hịch Tướng Sĩ", "Bình Ngô Đại Cáo", "Văn tế nghĩa sĩ Cần Giuộc", "Cáo biệt"],
+      answer: "Văn tế nghĩa sĩ Cần Giuộc",
+      category: "Văn học"
+    },
+    {
+      question: "Tác phẩm nào không phải của Nguyễn Du?",
+      options: ["Hịch Tướng Sĩ", "Truyện Kiều", "Văn tế nghĩa sĩ Cần Giuộc", "Cáo biệt"],
+      answer: "Hịch Tướng Sĩ",
+      category: "Văn học"
+    },
+    {
+      question: "Bài thơ nào của Hồ Xuân Hương?",
+      options: ["Hịch Tướng Sĩ", "Bánh trôi nước", "Cáo biệt", "Hành lang"],
+      answer: "Bánh trôi nước",
+      category: "Văn học"
+    },
+    {
+      question: "Truyện Kiều của Nguyễn Du được viết dưới thể loại nào?",
+      options: ["thơ", "truyện", "huyền thoại", "ký"],
+      answer: "thơ",
+      category: "Văn học"
+    },
+
+    // 5 câu Văn thơ và Sử thi
+    {
+      question: "Thánh Gióng đã sử dụng vũ khí gì để đánh giặc Ân?",
+      options: ["Cây tre", "Roi sắt", "Ngựa sắt", "Cả ba đáp án trên"],
+      answer: "Cây tre",
+      category: "Sử thi - Huyền thoại"
+    },
+    {
+      question: "Sơn Tinh và Thủy Tinh đã tranh tài bằng cách nào?",
+      options: ["Đánh nhau", "Thi tài", "Thi phép", "Thi vật"],
+      answer: "Thi vật",
+      category: "Sử thi - Huyền thoại"
+    },
+    {
+      question: "Chử Đồng Tử đã sử dụng gì để làm vợ?",
+      options: ["Cái nón", "Cái khăn", "Cái áo", "Cái chăn"],
+      answer: "Cái khăn",
+      category: "Sử thi - Huyền thoại"
+    },
+    {
+      question: "Mị Châu đã sử dụng gì để làm vợ?",
+      options: ["Cái nón", "Cái áo", "Cái khăn", "Cái chăn"],
+      answer: "Cái áo",
+      category: "Sử thi - Huyền thoại"
+    },
+    {
+      question: "An Dương Vương đã làm gì với thanh gươm thần?",
+      options: ["Đánh nhau", "Thi tài", "Thi phép", "Thi vật"],
+      answer: "Thi vật",
+      category: "Sử thi - Huyền thoại"
+    },
+  ];
+
+  let currentQuestionIndex = 0;
+  let score = 0;
+  let quizQuestions = [];
+
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+
+  function startQuiz() {
+    document.querySelector('.start-screen').style.display = 'none';
+    document.querySelector('.quiz-game').style.display = 'block';
+    
+    // Shuffle all questions
+    shuffle(questions);
+    
+    // Select 5 questions from each category
+    const categories = ["Ca dao", "Lịch sử", "Văn học", "Sử thi - Huyền thoại"];
+    quizQuestions = [];
+    categories.forEach(cat => {
+      const filtered = questions.filter(q => q.category === cat);
+      shuffle(filtered);
+      quizQuestions.push(...filtered.slice(0, 5));
+    });
+    
+    shuffle(quizQuestions); // Final shuffle to mix categories
+    
+    currentQuestionIndex = 0;
+    score = 0;
+    displayQuestion();
+  }
+
+  function displayQuestion() {
+    resetState();
+    const currentQuestion = quizQuestions[currentQuestionIndex];
+    document.getElementById('question-text').textContent = currentQuestion.question;
+
+    const optionsContainer = document.getElementById('options-container');
+    currentQuestion.options.forEach(option => {
+      const button = document.createElement('button');
+      button.textContent = option;
+      button.classList.add('option-btn');
+      button.onclick = () => checkAnswer(option, currentQuestion.answer);
+      optionsContainer.appendChild(button);
+    });
+  }
+
+  function checkAnswer(selectedOption, correctAnswer) {
+    const feedbackElement = document.getElementById('feedback');
+    const options = document.querySelectorAll('.option-btn');
+    const nextBtn = document.getElementById('next-btn');
+    
+    options.forEach(button => {
+      button.disabled = true;
+      if (button.textContent === correctAnswer) {
+        button.classList.add('correct');
+      }
+      if (button.textContent === selectedOption && selectedOption !== correctAnswer) {
+        button.classList.add('incorrect');
+      }
+    });
+
+    if (selectedOption === correctAnswer) {
+      score++;
+      feedbackElement.textContent = "Chính xác!";
+      feedbackElement.style.color = "#28a745";
+    } else {
+      feedbackElement.textContent = "Sai rồi. Đáp án đúng là: " + correctAnswer;
+      feedbackElement.style.color = "#dc3545";
+    }
+
+    nextBtn.style.display = 'block';
+  }
+
+  function nextQuestion() {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < quizQuestions.length) {
+      displayQuestion();
+      document.getElementById('next-btn').style.display = 'none';
+    } else {
+      showScore();
+    }
+  }
+
+  function resetState() {
+    document.getElementById('options-container').innerHTML = '';
+    document.getElementById('feedback').textContent = '';
+  }
+
+  function showScore() {
+    document.querySelector('.quiz-game').style.display = 'none';
+    const scoreScreen = document.querySelector('.score-screen');
+    scoreScreen.style.display = 'block';
+
+    document.getElementById('score').textContent = score;
+    document.getElementById('total-questions').textContent = quizQuestions.length;
+    
+    let message = "";
+    if (score === quizQuestions.length) {
+      message = "Chúc mừng! Bạn là một bậc thầy về kiến thức Việt Nam.";
+    } else if (score >= quizQuestions.length / 2) {
+      message = "Rất tốt! Bạn có kiến thức khá vững về các lĩnh vực này.";
+    } else {
+      message = "Bạn có thể thử lại để đạt kết quả cao hơn nhé!";
+    }
+    document.getElementById('result-message').textContent = message;
+  }
+
+  function restartQuiz() {
+    document.querySelector('.score-screen').style.display = 'none';
+    document.querySelector('.start-screen').style.display = 'block';
+  }
+</script>
+
+</body>
+</html>
